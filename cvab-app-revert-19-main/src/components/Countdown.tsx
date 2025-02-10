@@ -2,6 +2,9 @@ import './Countdown.css';
 import { Typography } from '@mui/material'
 import {Stack} from '@mui/material';
 import { useTranslation } from "react-i18next";
+import { Box } from '@mui/material';
+import { Avatar } from '@mui/material';
+import { Divider } from '@mui/material';
 
 export const Countdown = () => {
 
@@ -9,9 +12,9 @@ export const Countdown = () => {
     return (
         <Stack className="countdown" spacing={2}>
                 
-                {/* <Avatar alt="C V Andrews" src="/images/cvandrews.jpg" sx={{ width: 200, height: 200 }} /> */}
+                { <Avatar alt="C V Andrews" src="/images/cvandrews.jpg" sx={{ width: 200, height: 200 }} /> }
                 <Typography variant='h5'>{t("coming_soon", {ns: 'common'})}</Typography>
-                {/* <Box component="section" sx={{ p: 2, border: '1px dashed grey' }}>
+                { <Box component="section" sx={{ p: 2, border: '1px dashed grey' }}>
                     <Stack direction={'row'} spacing={4}>
                         <Stack>
                             <Box><Typography variant='h4'>24</Typography></Box>
@@ -31,7 +34,7 @@ export const Countdown = () => {
                         </Stack>
                     </Stack>
                     <Divider />
-                </Box> */}
+                </Box> }
         </Stack>
     )
 } 
