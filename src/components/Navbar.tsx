@@ -11,6 +11,7 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -53,64 +54,78 @@ export default function Navbar() {
   )
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 ${
+    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 pt-3 pb-1 ${
       isScrolled ? 'bg-black/95 backdrop-blur-sm shadow-md' : 'bg-black'
     }`}>
       <div className="max-w-[1470px] mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20 md:h-24 py-2 md:py-4">
+        <div className="flex items-center justify-between">
           {/* Logo/Brand */}
-          <div className="flex-shrink-0 w-28 md:w-36">
-            <Link href="/" className="text-2xl md:text-3xl font-bold text-white tracking-wider hover:text-amber-400 transition-colors">
+          <div className="flex-shrink-0 w-20 md:w-24">
+            <Link href="/" className="text-xl md:text-2xl font-bold text-white tracking-wider hover:text-amber-400 transition-colors">
               PAIVOT
             </Link>
           </div>
 
           {/* Search Bar */}
-          <div className="flex-1 flex justify-center max-w-2xl mx-12">
+          <div className="flex-1 flex justify-center max-w-xl mx-8">
             <form onSubmit={handleSearch} className="w-full relative">
               <input
                 type="text"
                 placeholder="Search..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-6 md:px-8 py-2 md:py-2.5 rounded-full bg-white/10 border border-white/20 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all text-xl md:text-2xl text-white placeholder-white/50"
+                className="w-full px-4 md:px-6 py-0.5 rounded-full bg-white/10 border border-white/20 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all text-base md:text-lg text-white placeholder-white/50"
               />
             </form>
           </div>
 
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="md:hidden p-1 rounded-md text-white hover:bg-white/10 flex items-center h-full"
+          >
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {isMobileMenuOpen ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              )}
+            </svg>
+          </button>
+
           {/* Navigation Links */}
-          <div className="hidden md:flex items-center justify-end space-x-8 lg:space-x-12">
+          <div className="hidden md:flex items-center justify-end space-x-3 lg:space-x-4">
             <Link 
               href="/"
-              className="text-white hover:text-amber-400 px-4 py-1.5 text-xl md:text-2xl font-medium transition-colors whitespace-nowrap"
+              className="text-white hover:text-amber-400 px-3 py-1 text-base md:text-lg font-medium transition-colors whitespace-nowrap"
             >
               Home
             </Link>
             <Link 
               href="/about"
-              className="text-white hover:text-amber-400 px-4 py-1.5 text-xl md:text-2xl font-medium transition-colors whitespace-nowrap"
+              className="text-white hover:text-amber-400 px-3 py-1 text-base md:text-lg font-medium transition-colors whitespace-nowrap"
             >
               About
             </Link>
             <Link 
               href="/contact"
-              className="text-white hover:text-amber-400 px-4 py-1.5 text-xl md:text-2xl font-medium transition-colors whitespace-nowrap"
+              className="text-white hover:text-amber-400 px-3 py-1 text-base md:text-lg font-medium transition-colors whitespace-nowrap"
             >
               Contact
             </Link>
             {session ? (
-              <div className="relative ml-8" ref={dropdownRef}>
+              <div className="relative ml-3" ref={dropdownRef}>
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   className="flex items-center space-x-2 focus:outline-none"
                 >
-                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-amber-400 bg-white/10">
+                  <div className="w-6 h-6 md:w-8 md:h-8 rounded-full overflow-hidden border-2 border-amber-400 bg-white/10">
                     {session.user?.image ? (
                       <Image
                         src={session.user.image}
                         alt="Profile"
-                        width={48}
-                        height={48}
+                        width={24}
+                        height={24}
                         className="object-cover"
                       />
                     ) : (
@@ -121,13 +136,13 @@ export default function Navbar() {
 
                 {isDropdownOpen && (
                   <div className="absolute right-0 mt-2 w-48 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 shadow-lg py-1 z-50">
-                    <div className="px-4 py-2 border-b border-white/10">
+                    <div className="px-3 py-1.5 border-b border-white/10">
                       <p className="text-sm text-white font-medium">{session.user?.name}</p>
                       <p className="text-xs text-white/60">{session.user?.email}</p>
                     </div>
                     <Link
                       href="/profile"
-                      className="block px-4 py-2 text-sm text-white hover:bg-white/10 transition-colors"
+                      className="block px-3 py-1.5 text-sm text-white hover:bg-white/10 transition-colors"
                       onClick={() => setIsDropdownOpen(false)}
                     >
                       Dashboard
@@ -137,7 +152,7 @@ export default function Navbar() {
                         setIsDropdownOpen(false)
                         signOut({ callbackUrl: '/' })
                       }}
-                      className="block w-full text-left px-4 py-2 text-sm text-white hover:bg-white/10 transition-colors"
+                      className="block w-full text-left px-3 py-1.5 text-sm text-white hover:bg-white/10 transition-colors"
                     >
                       Sign Out
                     </button>
@@ -147,13 +162,70 @@ export default function Navbar() {
             ) : (
               <Link 
                 href="/login"
-                className="bg-amber-400 text-white hover:bg-amber-500 px-4 md:px-6 py-1.5 md:py-2 rounded-full text-xl md:text-2xl font-medium transition-colors"
+                className="bg-amber-400 text-white hover:bg-amber-500 px-3 py-1 rounded-full text-base font-medium transition-colors"
               >
                 Login
               </Link>
             )}
           </div>
         </div>
+
+        {/* Mobile Menu */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden py-2 border-t border-white/10">
+            <div className="flex flex-col space-y-1">
+              <Link 
+                href="/"
+                className="text-white hover:text-amber-400 px-2 py-1 text-sm font-medium transition-colors"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Home
+              </Link>
+              <Link 
+                href="/about"
+                className="text-white hover:text-amber-400 px-2 py-1 text-sm font-medium transition-colors"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                About
+              </Link>
+              <Link 
+                href="/contact"
+                className="text-white hover:text-amber-400 px-2 py-1 text-sm font-medium transition-colors"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Contact
+              </Link>
+              {session ? (
+                <>
+                  <Link
+                    href="/profile"
+                    className="text-white hover:text-amber-400 px-2 py-1 text-sm font-medium transition-colors"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    Dashboard
+                  </Link>
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false)
+                      signOut({ callbackUrl: '/' })
+                    }}
+                    className="text-left text-white hover:text-amber-400 px-2 py-1 text-sm font-medium transition-colors"
+                  >
+                    Sign Out
+                  </button>
+                </>
+              ) : (
+                <Link 
+                  href="/login"
+                  className="text-white hover:text-amber-400 px-2 py-1 text-sm font-medium transition-colors"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Login
+                </Link>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </nav>
   )
