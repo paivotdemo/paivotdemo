@@ -41,12 +41,12 @@ export default function Home() {
         <div className="relative z-20 w-full max-w-[1470px] mx-auto px-4">
           {/* PAIVOT Text */}
           <div className="flex flex-col items-center -mt-[10vh]">
-            <h1 className="text-[3rem] md:text-[4rem] lg:text-[5rem] font-bold text-white/80 select-none">
+            <h1 className="text-[6rem] md:text-[8rem] lg:text-[10rem] font-bold text-white/60 select-none">
               PAIVOT
             </h1>
             <Link 
               href="/login" 
-              className="mt-3 md:mt-4 px-4 md:px-6 py-2 md:py-3 text-lg md:text-xl lg:text-2xl font-medium text-white bg-amber-400/50 hover:bg-amber-500/50 rounded-full backdrop-blur-sm transition-all duration-300 border border-white/30"
+              className="mt-2.5 md:mt-3.5 px-4 md:px-6 py-2 md:py-2.5 text-base md:text-lg lg:text-xl font-medium text-white bg-amber-400/50 hover:bg-amber-500/50 rounded-full backdrop-blur-sm transition-all duration-300 border border-white/30"
             >
               Get Started
             </Link>
