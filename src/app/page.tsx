@@ -22,7 +22,7 @@ export default function Home() {
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
         {/* Video Background */}
         <div className="absolute inset-0 w-full h-full">
-          <div className="absolute inset-0 bg-black/50 z-10" /> {/* Darkened overlay for better text visibility */}
+          <div className="absolute inset-0 bg-black/50 z-10" />
           <video
             ref={videoRef}
             autoPlay
@@ -37,23 +37,26 @@ export default function Home() {
           </video>
         </div>
 
-        {/* PAIVOT Text */}
-        <div className="relative z-20 flex flex-col items-center -mt-[10vh]">
-          <h1 className="text-[6vw] md:text-[8vw] font-bold text-white/80 select-none">
-            PAIVOT
-          </h1>
-          <Link 
-            href="/login" 
-            className="mt-4 md:mt-6 px-8 md:px-12 py-4 md:py-5 text-2xl md:text-3xl font-medium text-white bg-amber-400/50 hover:bg-amber-500/50 rounded-full backdrop-blur-sm transition-all duration-300 border border-white/30"
-          >
-            Get Started
-          </Link>
+        {/* Content Container */}
+        <div className="relative z-20 w-full max-w-[1470px] mx-auto px-4">
+          {/* PAIVOT Text */}
+          <div className="flex flex-col items-center -mt-[10vh]">
+            <h1 className="text-[7rem] md:text-[8.5rem] lg:text-[10rem] font-bold text-white/80 select-none">
+              PAIVOT
+            </h1>
+            <Link 
+              href="/login" 
+              className="mt-6 md:mt-8 px-10 md:px-14 py-5 md:py-6 text-2xl md:text-3xl lg:text-4xl font-medium text-white bg-amber-400/50 hover:bg-amber-500/50 rounded-full backdrop-blur-sm transition-all duration-300 border border-white/30"
+            >
+              Get Started
+            </Link>
+          </div>
         </div>
       </section>
 
       {/* Features Section */}
       <section className="py-12 md:py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1470px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-3 gap-8 md:gap-12">
             <div className="text-center">
               <div className="bg-blue-50 w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center mx-auto mb-4 md:mb-6">
