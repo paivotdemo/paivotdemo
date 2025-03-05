@@ -56,61 +56,61 @@ export default function Navbar() {
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 ${
       isScrolled ? 'bg-black/95 backdrop-blur-sm shadow-md' : 'bg-black'
     }`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center h-16 md:h-20 py-2 md:py-4">
+      <div className="max-w-[1470px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-20 md:h-24 py-2 md:py-4">
           {/* Logo/Brand */}
-          <div className="flex-shrink-0 w-24 md:w-32">
-            <Link href="/" className="text-xl md:text-2xl font-bold text-white tracking-wider hover:text-amber-400 transition-colors">
+          <div className="flex-shrink-0 w-28 md:w-36">
+            <Link href="/" className="text-2xl md:text-3xl font-bold text-white tracking-wider hover:text-amber-400 transition-colors">
               PAIVOT
             </Link>
           </div>
 
           {/* Search Bar */}
-          <div className="flex-1 flex justify-center max-w-md">
-            <form onSubmit={handleSearch} className="w-full max-w-sm relative">
+          <div className="flex-1 flex justify-center max-w-2xl mx-12">
+            <form onSubmit={handleSearch} className="w-full relative">
               <input
                 type="text"
                 placeholder="Search..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-3 md:px-4 py-1.5 md:py-2 rounded-full bg-white/10 border border-white/20 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all text-sm text-white placeholder-white/50"
+                className="w-full px-6 md:px-8 py-2 md:py-2.5 rounded-full bg-white/10 border border-white/20 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all text-xl md:text-2xl text-white placeholder-white/50"
               />
             </form>
           </div>
 
           {/* Navigation Links */}
-          <div className="hidden md:flex items-center justify-end w-32 ml-auto space-x-4 md:space-x-6">
+          <div className="hidden md:flex items-center justify-end space-x-8 lg:space-x-12">
             <Link 
               href="/"
-              className="text-white hover:text-amber-400 px-2 md:px-3 py-1.5 md:py-2 text-lg md:text-xl font-medium transition-colors"
+              className="text-white hover:text-amber-400 px-4 py-1.5 text-xl md:text-2xl font-medium transition-colors whitespace-nowrap"
             >
               Home
             </Link>
             <Link 
               href="/about"
-              className="text-white hover:text-amber-400 px-2 md:px-3 py-1.5 md:py-2 text-lg md:text-xl font-medium transition-colors"
+              className="text-white hover:text-amber-400 px-4 py-1.5 text-xl md:text-2xl font-medium transition-colors whitespace-nowrap"
             >
               About
             </Link>
             <Link 
               href="/contact"
-              className="text-white hover:text-amber-400 px-2 md:px-3 py-1.5 md:py-2 text-lg md:text-xl font-medium transition-colors"
+              className="text-white hover:text-amber-400 px-4 py-1.5 text-xl md:text-2xl font-medium transition-colors whitespace-nowrap"
             >
               Contact
             </Link>
             {session ? (
-              <div className="relative" ref={dropdownRef}>
+              <div className="relative ml-8" ref={dropdownRef}>
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   className="flex items-center space-x-2 focus:outline-none"
                 >
-                  <div className="w-8 h-8 md:w-10 md:h-10 rounded-full overflow-hidden border-2 border-amber-400 bg-white/10">
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-amber-400 bg-white/10">
                     {session.user?.image ? (
                       <Image
                         src={session.user.image}
                         alt="Profile"
-                        width={40}
-                        height={40}
+                        width={48}
+                        height={48}
                         className="object-cover"
                       />
                     ) : (
@@ -147,7 +147,7 @@ export default function Navbar() {
             ) : (
               <Link 
                 href="/login"
-                className="bg-amber-400 text-white hover:bg-amber-500 px-4 md:px-6 py-1.5 md:py-2 rounded-full text-lg md:text-xl font-medium transition-colors"
+                className="bg-amber-400 text-white hover:bg-amber-500 px-4 md:px-6 py-1.5 md:py-2 rounded-full text-xl md:text-2xl font-medium transition-colors"
               >
                 Login
               </Link>
