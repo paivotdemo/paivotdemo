@@ -20,8 +20,9 @@ export default function Login() {
   }
 
   return (
-    <main className="min-h-screen bg-black flex items-center justify-center">
-      <div className="max-w-md w-full mx-auto px-4 sm:px-6 lg:px-8 -mt-24">
+    <main className="min-h-screen bg-black flex items-center justify-center pb-24">
+      <div className="fixed inset-0 bg-black -z-10"></div>
+      <div className="max-w-md w-full mx-auto px-4 sm:px-6 lg:px-8 pt-24">
         <div className="text-center mb-8">
           <h1 className="text-5xl font-bold text-white mb-4">Welcome Back</h1>
           <p className="text-xl text-white/60">Don't have an account yet?</p>
@@ -65,7 +66,7 @@ export default function Login() {
               <div className="w-full border-t border-white/20"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-black text-white/60">Or continue with email</span>
+              <span className="px-4 bg-black text-white/60 backdrop-blur-sm">Or continue with email</span>
             </div>
           </div>
 
