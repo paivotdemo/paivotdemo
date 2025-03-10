@@ -68,7 +68,7 @@ export default function SignUp() {
               <div className="w-full border-t border-white/20"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-black text-white/60">Or sign up with email</span>
+              <span className="px-4 bg-black text-white/60 backdrop-blur-sm">Or sign up with email</span>
             </div>
           </div>
 

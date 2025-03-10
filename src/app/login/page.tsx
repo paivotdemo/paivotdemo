@@ -66,7 +66,7 @@ export default function Login() {
               <div className="w-full border-t border-white/20"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-black text-white/60">Or continue with email</span>
+              <span className="px-4 bg-black text-white/60 backdrop-blur-sm">Or continue with email</span>
             </div>
           </div>
 
