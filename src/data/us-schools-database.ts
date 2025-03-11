@@ -1,20 +1,12 @@
-export interface USSchool {
+interface USSchool {
   id: string;
   name: string;
-  type: 'highschool' | 'university' | 'college';
+  type: 'highschool' | 'college' | 'university';
   city: string;
   state: string;
   zip: string;
   isPublic: boolean;
   website?: string;
-  // Additional fields
-  street?: string;
-  county?: string;
-  localeType?: 'urban' | 'suburban' | 'rural';
-  coordinates?: {
-    latitude: number;
-    longitude: number;
-  };
 }
 
 // Sample data structure - we can expand this with real data
@@ -45,7 +37,7 @@ export interface SchoolSearchParams {
   query?: string;
   state?: string;
   city?: string;
-  type?: 'highschool' | 'university' | 'college';
+  type?: 'highschool' | 'college' | 'university';
   isPublic?: boolean;
 }
 
@@ -84,4 +76,5 @@ export function searchSchools(params: SchoolSearchParams): USSchool[] {
   return results;
 }
 
-export { usSchools }; 
+export { usSchools };
+export type { USSchool }; 
