@@ -4,21 +4,279 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { signIn } from 'next-auth/react'
 
+interface Institution {
+  id: string
+  name: string
+  city: string
+  state: string
+  type: 'highschool' | 'college'
+}
+
 export default function SignUp() {
+  const [step, setStep] = useState(1)
+  const [showInstitutionDropdown, setShowInstitutionDropdown] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<Institution[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
   const [signupData, setSignupData] = useState({
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    firstName: '',
+    middleName: '',
+    lastName: '',
+    status: '' as 'highschool' | 'college' | 'employed',
+    institution: '',
+    institutionId: '',
+    city: '',
+    state: ''
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (signupData.password !== signupData.confirmPassword) {
-      alert('Passwords do not match')
-      return
+    setError('') // Clear any existing errors
+    
+    if (step === 1) {
+      if (signupData.password !== signupData.confirmPassword) {
+        setError('Passwords do not match')
+        return
+      }
+      setStep(2)
+    } else if (step === 2) {
+      if (!signupData.firstName || !signupData.lastName) {
+        setError('First and last name are required')
+        return
+      }
+      setStep(3)
+    } else {
+      if (!signupData.status) {
+        setError('Please select your current status')
+        return
+      }
+      if ((signupData.status === 'highschool' || signupData.status === 'college') && !signupData.institution) {
+        setError('Please select your institution')
+        return
+      }
+      // Handle final submission
+      try {
+        // We'll handle the actual signup in the API route
+        await signIn('email', { 
+          email: signupData.email, 
+          password: signupData.password,
+          callbackUrl: '/' 
+        })
+      } catch (err) {
+        setError('Failed to create account')
+        console.error(err)
+      }
     }
-    // We'll handle the actual signup in the API route
-    signIn('email', { email: signupData.email, password: signupData.password, callbackUrl: '/' })
+  }
+
+  // Update form data and clear errors
+  const updateFormData = (updates: Partial<typeof signupData>) => {
+    setSignupData(prev => ({ ...prev, ...updates }))
+    setError('') // Clear errors when user makes changes
+  }
+
+  const handleInstitutionSearch = async (query: string) => {
+    setSearchQuery(query)
+    updateFormData({ institution: query })
+    
+    if (query.length >= 2) {
+      try {
+        setLoading(true)
+        const response = await fetch(`/api/institutions/search?q=${encodeURIComponent(query)}&type=${signupData.status}`)
+        const data = await response.json()
+        setSearchResults(data.institutions || [])
+        setShowInstitutionDropdown(true)
+      } catch (err) {
+        console.error('Failed to search institutions:', err)
+        setSearchResults([])
+      } finally {
+        setLoading(false)
+      }
+    } else {
+      setSearchResults([])
+      setShowInstitutionDropdown(false)
+    }
+  }
+
+  const handleInstitutionSelect = (institution: Institution) => {
+    updateFormData({
+      institution: institution.name,
+      institutionId: institution.id,
+      city: institution.city,
+      state: institution.state
+    })
+    setSearchQuery(institution.name)
+    setShowInstitutionDropdown(false)
+  }
+
+  const renderStep = () => {
+    switch (step) {
+      case 1:
+        return (
+          <div className="space-y-6">
+            <div>
+              <label htmlFor="email" className="block text-white/80 mb-2 text-lg">Email</label>
+              <input
+                type="email"
+                id="email"
+                value={signupData.email}
+                onChange={(e) => updateFormData({ email: e.target.value })}
+                className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all text-white placeholder-white/50"
+                required
+              />
+            </div>
+
+            <div>
+              <label htmlFor="password" className="block text-white/80 mb-2 text-lg">Password</label>
+              <input
+                type="password"
+                id="password"
+                value={signupData.password}
+                onChange={(e) => updateFormData({ password: e.target.value })}
+                className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all text-white placeholder-white/50"
+                required
+              />
+            </div>
+
+            <div>
+              <label htmlFor="confirmPassword" className="block text-white/80 mb-2 text-lg">Confirm Password</label>
+              <input
+                type="password"
+                id="confirmPassword"
+                value={signupData.confirmPassword}
+                onChange={(e) => updateFormData({ confirmPassword: e.target.value })}
+                className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all text-white placeholder-white/50"
+                required
+              />
+            </div>
+          </div>
+        )
+
+      case 2:
+        return (
+          <div className="space-y-6">
+            <div>
+              <label htmlFor="firstName" className="block text-white/80 mb-2 text-lg">First Name</label>
+              <input
+                type="text"
+                id="firstName"
+                value={signupData.firstName}
+                onChange={(e) => updateFormData({ firstName: e.target.value })}
+                className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all text-white placeholder-white/50"
+                required
+              />
+            </div>
+
+            <div>
+              <label htmlFor="middleName" className="block text-white/80 mb-2 text-lg">Middle Name (Optional)</label>
+              <input
+                type="text"
+                id="middleName"
+                value={signupData.middleName}
+                onChange={(e) => updateFormData({ middleName: e.target.value })}
+                className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all text-white placeholder-white/50"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="lastName" className="block text-white/80 mb-2 text-lg">Last Name</label>
+              <input
+                type="text"
+                id="lastName"
+                value={signupData.lastName}
+                onChange={(e) => updateFormData({ lastName: e.target.value })}
+                className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all text-white placeholder-white/50"
+                required
+              />
+            </div>
+          </div>
+        )
+
+      case 3:
+        return (
+          <div className="space-y-6">
+            <div>
+              <label htmlFor="status" className="block text-white/80 mb-2 text-lg">Current Status</label>
+              <select
+                id="status"
+                value={signupData.status}
+                onChange={(e) => {
+                  updateFormData({ 
+                    status: e.target.value as 'highschool' | 'college' | 'employed',
+                    institution: '',
+                    institutionId: '',
+                    city: '',
+                    state: ''
+                  })
+                  setSearchQuery('')
+                  setSearchResults([])
+                }}
+                className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all text-white placeholder-white/50"
+                required
+              >
+                <option value="">Select your status</option>
+                <option value="highschool">High School Student</option>
+                <option value="college">College Student</option>
+                <option value="employed">Employed</option>
+              </select>
+            </div>
+
+            {(signupData.status === 'highschool' || signupData.status === 'college') && (
+              <div className="relative">
+                <label htmlFor="institution" className="block text-white/80 mb-2 text-lg">
+                  {signupData.status === 'highschool' ? 'High School Name' : 'College/University Name'}
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    id="institution"
+                    value={searchQuery}
+                    onChange={(e) => handleInstitutionSearch(e.target.value)}
+                    onFocus={() => {
+                      if (searchQuery.length >= 2) {
+                        setShowInstitutionDropdown(true)
+                      }
+                    }}
+                    placeholder={`Search by name, city, or state`}
+                    className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all text-white placeholder-white/50"
+                    required
+                  />
+                  {loading && (
+                    <div className="absolute right-3 top-3">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-amber-400"></div>
+                    </div>
+                  )}
+                </div>
+
+                {showInstitutionDropdown && searchResults.length > 0 && (
+                  <div className="absolute z-50 mt-1 w-full bg-black/90 backdrop-blur-sm rounded-lg border border-white/20 max-h-60 overflow-auto shadow-xl">
+                    {searchResults.map((institution) => (
+                      <div
+                        key={institution.id}
+                        onClick={() => handleInstitutionSelect(institution)}
+                        className="px-4 py-3 hover:bg-white/10 cursor-pointer border-b border-white/10 last:border-b-0 transition-colors"
+                      >
+                        <div className="font-medium text-white">{institution.name}</div>
+                        <div className="text-sm text-white/60">
+                          {institution.city}, {institution.state}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )
+
+      default:
+        return null
+    }
   }
 
   return (
@@ -37,84 +295,53 @@ export default function SignUp() {
         </div>
         
         <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10">
-          <div className="space-y-4 mb-8">
-            <button
-              onClick={() => signIn('google', { callbackUrl: '/' })}
-              className="w-full flex items-center justify-center gap-3 px-8 py-3 rounded-lg bg-white hover:bg-gray-100 transition-colors text-gray-800 text-xl font-medium"
-            >
-              <img src="/google.svg" alt="Google" className="w-6 h-6" />
-              Continue with Google
-            </button>
-            
-            <button
-              onClick={() => signIn('apple', { callbackUrl: '/' })}
-              className="w-full flex items-center justify-center gap-3 px-8 py-3 rounded-lg bg-black hover:bg-gray-900 transition-colors text-white text-xl font-medium border border-white/20"
-            >
-              <img src="/apple.svg" alt="Apple" className="w-6 h-6" />
-              Continue with Apple
-            </button>
-            
-            <button
-              onClick={() => signIn('linkedin', { callbackUrl: '/' })}
-              className="w-full flex items-center justify-center gap-3 px-8 py-3 rounded-lg bg-[#0077B5] hover:bg-[#006399] transition-colors text-white text-xl font-medium"
-            >
-              <img src="/linkedin.svg" alt="LinkedIn" className="w-6 h-6" />
-              Continue with LinkedIn
-            </button>
+          <div className="flex justify-between items-center mb-8">
+            <div className="flex gap-2">
+              {[1, 2, 3].map((s) => (
+                <div
+                  key={s}
+                  className={`w-3 h-3 rounded-full ${
+                    s === step ? 'bg-amber-400' : 'bg-white/20'
+                  }`}
+                />
+              ))}
+            </div>
+            <div className="text-white/60 text-sm">
+              Step {step} of 3
+            </div>
           </div>
 
-          <div className="relative mb-8">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-white/20"></div>
+          {error && (
+            <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500">
+              {error}
             </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-black text-white/60 backdrop-blur-sm">Or sign up with email</span>
-            </div>
-          </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label htmlFor="email" className="block text-white/80 mb-2 text-lg">Email</label>
-              <input
-                type="email"
-                id="email"
-                value={signupData.email}
-                onChange={(e) => setSignupData({ ...signupData, email: e.target.value })}
-                className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all text-white placeholder-white/50"
-                required
-              />
+            {renderStep()}
+            
+            <div className="flex justify-between items-center pt-4">
+              {step > 1 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStep(step - 1)
+                    setError('')
+                  }}
+                  className="px-6 py-2 text-white/80 hover:text-white transition-colors"
+                >
+                  Back
+                </button>
+              )}
+              <button
+                type="submit"
+                className={`px-8 py-3 rounded-lg bg-amber-400 hover:bg-amber-500 text-white text-xl font-medium transition-colors ${
+                  step === 1 ? 'w-full' : 'ml-auto'
+                }`}
+              >
+                {step === 3 ? 'Create Account' : 'Next'}
+              </button>
             </div>
-
-            <div>
-              <label htmlFor="password" className="block text-white/80 mb-2 text-lg">Password</label>
-              <input
-                type="password"
-                id="password"
-                value={signupData.password}
-                onChange={(e) => setSignupData({ ...signupData, password: e.target.value })}
-                className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all text-white placeholder-white/50"
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="confirmPassword" className="block text-white/80 mb-2 text-lg">Confirm Password</label>
-              <input
-                type="password"
-                id="confirmPassword"
-                value={signupData.confirmPassword}
-                onChange={(e) => setSignupData({ ...signupData, confirmPassword: e.target.value })}
-                className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all text-white placeholder-white/50"
-                required
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="w-full bg-amber-400 text-white px-8 py-3 rounded-lg hover:bg-amber-500 transition-colors text-xl font-medium"
-            >
-              Create Account
-            </button>
           </form>
         </div>
       </div>
