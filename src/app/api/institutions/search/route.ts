@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { searchSchools } from '../../../../services/schools'
-import { searchSchools as searchLocalSchools } from '../../../../data/us-schools-database'
+import { searchHighSchools } from '../../../../services/highschools'
 
 export async function GET(request: Request) {
   try {
@@ -36,7 +36,7 @@ export async function GET(request: Request) {
       })
     }
 
-    // Only use ArcGIS API for university searches
+    // Use appropriate service based on institution type
     if (type === 'university') {
       try {
         const result = await searchSchools(query, {
@@ -55,26 +55,41 @@ export async function GET(request: Request) {
             totalPages: result.totalPages
           }
         })
-      } catch (arcgisError) {
-        console.error('ArcGIS search failed:', arcgisError);
-        // Fall back to local database
+      } catch (error) {
+        console.error('University search failed:', error);
+        throw error;
+      }
+    } else if (type === 'highschool') {
+      try {
+        const result = await searchHighSchools(query, {
+          state,
+          county,
+          localeType,
+          page,
+          limit
+        })
+
+        return NextResponse.json({
+          institutions: result.schools,
+          pagination: {
+            total: result.total,
+            page: result.page,
+            totalPages: result.totalPages
+          }
+        })
+      } catch (error) {
+        console.error('High school search failed:', error);
+        throw error;
       }
     }
 
-    // Use local database for high schools or if ArcGIS fails
-    const institutions = searchLocalSchools({
-      query,
-      type: type === 'highschool' ? 'highschool' : type === 'college' ? 'university' : undefined,
-      state,
-      city: undefined
-    })
-
+    // If no valid type specified, return empty results
     return NextResponse.json({
-      institutions,
+      institutions: [],
       pagination: {
-        total: institutions.length,
+        total: 0,
         page: 1,
-        totalPages: 1
+        totalPages: 0
       }
     })
   } catch (error) {
