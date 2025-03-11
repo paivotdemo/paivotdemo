@@ -3,20 +3,37 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { signIn } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 
 export default function Login() {
+  const router = useRouter()
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
   const [loginData, setLoginData] = useState({
     email: '',
     password: ''
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    signIn('credentials', { 
-      email: loginData.email, 
-      password: loginData.password,
-      callbackUrl: '/profile'
-    })
+    setLoading(true)
+    try {
+      const result = await signIn('credentials', { 
+        email: loginData.email, 
+        password: loginData.password,
+        redirect: false
+      })
+
+      if (result?.error) {
+        setError('Invalid credentials')
+      } else {
+        router.push('/profile')
+      }
+    } catch (error) {
+      setError('An error occurred during sign in')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -35,9 +52,15 @@ export default function Login() {
         </div>
         
         <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10">
+          {error && (
+            <div className="mb-4 p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500">
+              {error}
+            </div>
+          )}
+          
           <div className="space-y-4 mb-8">
             <button
-              onClick={() => signIn('google', { callbackUrl: '/' })}
+              onClick={() => signIn('google', { redirect: true, callbackUrl: '/profile' })}
               className="w-full flex items-center justify-center gap-3 px-8 py-3 rounded-lg bg-white hover:bg-gray-100 transition-colors text-gray-800 text-xl font-medium"
             >
               <img src="/google.svg" alt="Google" className="w-6 h-6" />
@@ -45,7 +68,7 @@ export default function Login() {
             </button>
             
             <button
-              onClick={() => signIn('apple', { callbackUrl: '/' })}
+              onClick={() => signIn('apple', { redirect: true, callbackUrl: '/profile' })}
               className="w-full flex items-center justify-center gap-3 px-8 py-3 rounded-lg bg-black hover:bg-gray-900 transition-colors text-white text-xl font-medium border border-white/20"
             >
               <img src="/apple.svg" alt="Apple" className="w-6 h-6" />
@@ -53,7 +76,7 @@ export default function Login() {
             </button>
             
             <button
-              onClick={() => signIn('linkedin', { callbackUrl: '/' })}
+              onClick={() => signIn('linkedin', { redirect: true, callbackUrl: '/profile' })}
               className="w-full flex items-center justify-center gap-3 px-8 py-3 rounded-lg bg-[#0077B5] hover:bg-[#006399] transition-colors text-white text-xl font-medium"
             >
               <img src="/linkedin.svg" alt="LinkedIn" className="w-6 h-6" />
