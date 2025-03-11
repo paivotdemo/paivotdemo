@@ -1,13 +1,34 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import Image from 'next/image'
+import { useAuthSession } from '@/lib/auth'
+import { useRouter } from 'next/navigation'
 
 export default function Profile() {
   const { data: session } = useSession()
+  const { user } = useAuthSession()
+  const router = useRouter()
   const [profileImage, setProfileImage] = useState('/default-avatar.png')
   const [bannerImage, setBannerImage] = useState('/default-banner.jpg')
+
+  useEffect(() => {
+    // Make first user admin if there's no admin yet
+    const setupAdmin = async () => {
+      if (user) {
+        try {
+          await fetch('/api/admin/setup', {
+            method: 'POST'
+          })
+        } catch (error) {
+          console.error('Error setting up admin:', error)
+        }
+      }
+    }
+    
+    setupAdmin()
+  }, [user])
 
   const projects = [
     { id: 1, name: "Career Path Analysis", progress: 75, status: "In Progress" },
@@ -53,6 +74,21 @@ export default function Profile() {
             <div className="mb-2">
               <h1 className="text-4xl font-bold text-white">{session?.user?.name || 'User Name'}</h1>
               <p className="text-white/60">{session?.user?.email || 'email@example.com'}</p>
+              <div className="flex items-center mt-2 space-x-3">
+                {user?.role === 'admin' && (
+                  <span className="bg-purple-500/20 text-purple-400 px-3 py-1 rounded-full text-sm inline-block">
+                    Admin
+                  </span>
+                )}
+                {user?.role === 'admin' && (
+                  <button
+                    onClick={() => router.push('/admin')}
+                    className="text-amber-400 hover:text-amber-300 text-sm"
+                  >
+                    Admin Dashboard →
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>

@@ -54,15 +54,41 @@ export default function SignUp() {
       }
       // Handle final submission
       try {
-        // We'll handle the actual signup in the API route
-        await signIn('email', { 
-          email: signupData.email, 
-          password: signupData.password,
-          callbackUrl: '/' 
+        setLoading(true)
+        // Call the register API endpoint
+        const response = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: signupData.email,
+            password: signupData.password,
+            firstName: signupData.firstName,
+            lastName: signupData.lastName,
+            status: signupData.status,
+            institution: signupData.institution
+          }),
         })
-      } catch (err) {
-        setError('Failed to create account')
+
+        const data = await response.json()
+        
+        if (!response.ok) {
+          throw new Error(data.error || 'Registration failed')
+        }
+        
+        // After successful registration, sign in the user
+        const result = await signIn('credentials', {
+          email: signupData.email,
+          password: signupData.password,
+          redirect: true,
+          callbackUrl: '/profile'
+        })
+      } catch (err: any) {
+        setError(err.message || 'Failed to create account')
         console.error(err)
+      } finally {
+        setLoading(false)
       }
     }
   }
