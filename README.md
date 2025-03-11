@@ -1,36 +1,119 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Paivot - Next.js Application
 
-## Getting Started
+A modern web application built with Next.js, Prisma, and NextAuth.js.
 
-First, run the development server:
+## Project Setup
+
+### Quick Setup (Recommended)
+
+We've created a setup script to make it easy to get started:
 
 ```bash
-npm run dev
-# or
+# Clone the repository
+git clone https://github.com/paivotdemo/paivotdemo.git
+cd paivotdemo
+
+# Run the setup script
+./setup.sh
+```
+
+The setup script will:
+1. Create environment files from templates
+2. Install dependencies
+3. Generate the Prisma client
+4. Optionally run database migrations
+
+### Manual Setup
+
+If you prefer to set up manually:
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/paivotdemo/paivotdemo.git
+   cd paivotdemo
+   ```
+
+2. Create environment files:
+   ```bash
+   cp .env.example .env
+   cp .env.example .env.local
+   ```
+
+3. Edit the `.env` and `.env.local` files with your actual credentials.
+
+4. Install dependencies:
+   ```bash
+   yarn install
+   ```
+
+5. Generate Prisma client:
+   ```bash
+   npx prisma generate
+   ```
+
+6. Run database migrations:
+   ```bash
+   npx prisma migrate dev
+   ```
+
+## Database Setup
+
+### Option 1: Remote Database (Recommended for Team Development)
+
+For seamless development across multiple machines, we recommend using a shared remote database:
+
+1. Create a PostgreSQL database on [Supabase](https://supabase.com/), [Railway](https://railway.app/), or [Neon](https://neon.tech/)
+2. Update your `.env` file with the connection string
+
+### Option 2: Local Database
+
+For local development:
+
+1. Install PostgreSQL on your machine
+2. Create a database
+3. Update your `.env` file with the local connection string
+4. Run migrations: `npx prisma migrate dev`
+
+## Development
+
+Start the development server:
+
+```bash
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Authentication
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+This project uses NextAuth.js for authentication. To set up authentication:
 
-## Learn More
+1. Configure your OAuth providers in the `.env` file
+2. For local development, set `NEXTAUTH_URL="http://localhost:3000"`
+3. Generate a secure random string for `NEXTAUTH_SECRET`
 
-To learn more about Next.js, take a look at the following resources:
+## Deployment
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Deploy on Vercel (Recommended)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new) from the creators of Next.js.
 
-## Deploy on Vercel
+1. Connect your GitHub repository to Vercel
+2. Configure environment variables in the Vercel dashboard
+3. Deploy with a single click
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Other Deployment Options
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [Netlify](https://netlify.com)
+- [Railway](https://railway.app)
+- [Render](https://render.com)
+
+## Contributing
+
+1. Create a new branch for your feature
+2. Make your changes
+3. Submit a pull request
+
+## License
+
+[MIT](LICENSE)
