@@ -1,22 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, FormEvent, ChangeEvent } from 'react'
 import Link from 'next/link'
 import { signIn } from 'next-auth/react'
-
-interface Institution {
-  id: string
-  name: string
-  city: string
-  state: string
-  type: 'highschool' | 'college'
-}
+import { USSchool } from '../../data/us-schools-database'
 
 export default function SignUp() {
   const [step, setStep] = useState(1)
   const [showInstitutionDropdown, setShowInstitutionDropdown] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [searchResults, setSearchResults] = useState<Institution[]>([])
+  const [searchResults, setSearchResults] = useState<USSchool[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -27,14 +20,14 @@ export default function SignUp() {
     firstName: '',
     middleName: '',
     lastName: '',
-    status: '' as 'highschool' | 'college' | 'employed',
+    status: '' as 'highschool' | 'university' | 'employed',
     institution: '',
     institutionId: '',
     city: '',
     state: ''
   })
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError('') // Clear any existing errors
     
@@ -55,7 +48,7 @@ export default function SignUp() {
         setError('Please select your current status')
         return
       }
-      if ((signupData.status === 'highschool' || signupData.status === 'college') && !signupData.institution) {
+      if ((signupData.status === 'highschool' || signupData.status === 'university') && !signupData.institution) {
         setError('Please select your institution')
         return
       }
@@ -76,7 +69,7 @@ export default function SignUp() {
 
   // Update form data and clear errors
   const updateFormData = (updates: Partial<typeof signupData>) => {
-    setSignupData(prev => ({ ...prev, ...updates }))
+    setSignupData((prev: typeof signupData) => ({ ...prev, ...updates }))
     setError('') // Clear errors when user makes changes
   }
 
@@ -103,7 +96,7 @@ export default function SignUp() {
     }
   }
 
-  const handleInstitutionSelect = (institution: Institution) => {
+  const handleInstitutionSelect = (institution: USSchool) => {
     updateFormData({
       institution: institution.name,
       institutionId: institution.id,
@@ -207,7 +200,7 @@ export default function SignUp() {
                 value={signupData.status}
                 onChange={(e) => {
                   updateFormData({ 
-                    status: e.target.value as 'highschool' | 'college' | 'employed',
+                    status: e.target.value as 'highschool' | 'university' | 'employed',
                     institution: '',
                     institutionId: '',
                     city: '',
@@ -221,15 +214,15 @@ export default function SignUp() {
               >
                 <option value="">Select your status</option>
                 <option value="highschool">High School Student</option>
-                <option value="college">College Student</option>
+                <option value="university">University Student</option>
                 <option value="employed">Employed</option>
               </select>
             </div>
 
-            {(signupData.status === 'highschool' || signupData.status === 'college') && (
+            {(signupData.status === 'highschool' || signupData.status === 'university') && (
               <div className="relative">
                 <label htmlFor="institution" className="block text-white/80 mb-2 text-lg">
-                  {signupData.status === 'highschool' ? 'High School Name' : 'College/University Name'}
+                  {signupData.status === 'highschool' ? 'High School Name' : 'University Name'}
                 </label>
                 <div className="relative">
                   <input
