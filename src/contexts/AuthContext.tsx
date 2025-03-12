@@ -93,6 +93,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Sign up with email and password
   const signUp = async (email: string, password: string, userData: any) => {
     try {
+      console.log('AuthContext: Signing up with Supabase', { email, userData })
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -102,12 +104,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
       
       if (error) {
+        console.error('AuthContext: Signup error', error)
         return { error, user: null }
+      }
+      
+      console.log('AuthContext: Signup successful', data)
+      
+      // If auto-confirm is enabled, we can create the profile here
+      if (data.user && data.user.confirmed_at) {
+        try {
+          // Ensure profile exists
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .upsert({
+              id: data.user.id,
+              email: data.user.email,
+              full_name: userData.full_name,
+              first_name: userData.first_name,
+              last_name: userData.last_name,
+              middle_name: userData.middle_name,
+              status: userData.status,
+              institution: userData.institution,
+              institution_id: userData.institution_id,
+              city: userData.city,
+              state: userData.state,
+              updated_at: new Date().toISOString()
+            })
+            
+          if (profileError) {
+            console.error('AuthContext: Error creating profile', profileError)
+          }
+        } catch (profileErr) {
+          console.error('AuthContext: Profile creation error', profileErr)
+        }
       }
       
       return { error: null, user: data.user }
     } catch (error) {
-      console.error('Error signing up:', error)
+      console.error('AuthContext: Error signing up:', error)
       return { error, user: null }
     }
   }

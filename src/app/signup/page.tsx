@@ -76,8 +76,11 @@ export default function SignUp() {
           institution: signupData.institution,
           institution_id: signupData.institutionId,
           city: signupData.city,
-          state: signupData.state
+          state: signupData.state,
+          email: signupData.email // Add email to ensure it's in the metadata
         }
+        
+        console.log('Signing up with Supabase:', { email: signupData.email, userData })
         
         // Register with Supabase
         const { error, user } = await signUp(signupData.email, signupData.password, userData)
@@ -85,6 +88,8 @@ export default function SignUp() {
         if (error) {
           throw new Error(error.message || 'Registration failed')
         }
+        
+        console.log('Supabase signup successful:', user)
         
         // If email confirmation is required
         if (!user?.confirmed_at) {
@@ -94,7 +99,7 @@ export default function SignUp() {
         }
       } catch (err: any) {
         setError(err.message || 'Failed to create account')
-        console.error(err)
+        console.error('Signup error:', err)
       } finally {
         setLoading(false)
       }
