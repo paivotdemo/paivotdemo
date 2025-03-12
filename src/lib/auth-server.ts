@@ -29,17 +29,27 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
+          console.log("Missing credentials");
           return null;
         }
 
         try {
+          // Test database connection first
+          await prisma.$connect();
+          
           const user = await prisma.user.findUnique({
             where: { 
               email: credentials.email 
             }
           });
 
-          if (!user?.password) {
+          if (!user) {
+            console.log(`User not found: ${credentials.email}`);
+            return null;
+          }
+
+          if (!user.password) {
+            console.log(`User has no password: ${credentials.email}`);
             return null;
           }
 
@@ -49,9 +59,11 @@ export const authOptions: NextAuthOptions = {
           );
 
           if (!isPasswordValid) {
+            console.log(`Invalid password for: ${credentials.email}`);
             return null;
           }
 
+          console.log(`Successful login: ${credentials.email}`);
           return {
             id: user.id,
             name: user.name,
@@ -62,6 +74,8 @@ export const authOptions: NextAuthOptions = {
         } catch (error) {
           console.error("Authentication error:", error);
           return null;
+        } finally {
+          await prisma.$disconnect();
         }
       }
     }),
@@ -98,6 +112,26 @@ export const authOptions: NextAuthOptions = {
         domain: isProduction ? process.env.COOKIE_DOMAIN || undefined : undefined,
       },
     },
+    callbackUrl: {
+      name: `${isProduction ? '__Secure-' : ''}next-auth.callback-url`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: isProduction,
+        domain: isProduction ? process.env.COOKIE_DOMAIN || undefined : undefined,
+      },
+    },
+    csrfToken: {
+      name: `${isProduction ? '__Host-' : ''}next-auth.csrf-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: isProduction,
+        domain: isProduction ? process.env.COOKIE_DOMAIN || undefined : undefined,
+      },
+    },
   },
   callbacks: {
     async jwt({ token, user }) {
@@ -124,19 +158,28 @@ export const authOptions: NextAuthOptions = {
       console.warn(`Auth warning: ${code}`);
     },
     debug(code, metadata) {
-      if (process.env.NODE_ENV === "development") {
-        console.debug(`Auth debug: ${code}`, metadata);
-      }
+      console.debug(`Auth debug: ${code}`, metadata);
     },
   },
+  secret: process.env.NEXTAUTH_SECRET,
 }
 
 // Server-side auth helpers
 export async function getServerAuthSession() {
-  return getServerSession(authOptions);
+  try {
+    return await getServerSession(authOptions);
+  } catch (error) {
+    console.error("Error getting server session:", error);
+    return null;
+  }
 }
 
 export async function getCurrentUser() {
-  const session = await getServerAuthSession();
-  return session?.user;
+  try {
+    const session = await getServerAuthSession();
+    return session?.user;
+  } catch (error) {
+    console.error("Error getting current user:", error);
+    return null;
+  }
 } 
