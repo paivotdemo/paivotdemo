@@ -3,10 +3,12 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useState, useEffect, useRef } from 'react'
-import { useSession, signOut } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function Navbar() {
-  const { data: session } = useSession()
+  const router = useRouter()
+  const { user, signOut } = useAuth()
   const [searchQuery, setSearchQuery] = useState('')
   const [isScrolled, setIsScrolled] = useState(false)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
@@ -38,6 +40,17 @@ export default function Navbar() {
     // TODO: Implement search functionality
     console.log('Search query:', searchQuery)
   }
+
+  const handleLogout = async () => {
+    await signOut()
+    setIsDropdownOpen(false)
+    setIsMobileMenuOpen(false)
+  }
+
+  // Get user metadata and profile image
+  const userData = user?.user_metadata || {}
+  const userImage = userData.avatar_url || '/default-avatar.png'
+  const userName = userData.full_name || `${userData.first_name || ''} ${userData.last_name || ''}`.trim() || user?.email
 
   const UserIcon = () => (
     <svg 
@@ -113,16 +126,16 @@ export default function Navbar() {
             >
               Contact
             </Link>
-            {session ? (
+            {user ? (
               <div className="relative ml-3" ref={dropdownRef}>
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   className="flex items-center space-x-2 focus:outline-none"
                 >
                   <div className="w-6 h-6 md:w-8 md:h-8 rounded-full overflow-hidden border-2 border-amber-400 bg-white/10">
-                    {session.user?.image ? (
+                    {userImage ? (
                       <Image
-                        src={session.user.image}
+                        src={userImage}
                         alt="Profile"
                         width={24}
                         height={24}
@@ -137,8 +150,8 @@ export default function Navbar() {
                 {isDropdownOpen && (
                   <div className="absolute right-0 mt-2 w-48 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 shadow-lg py-1 z-50">
                     <div className="px-3 py-1.5 border-b border-white/10">
-                      <p className="text-sm text-white font-medium">{session.user?.name}</p>
-                      <p className="text-xs text-white/60">{session.user?.email}</p>
+                      <p className="text-sm text-white font-medium">{userName}</p>
+                      <p className="text-xs text-white/60">{user.email}</p>
                     </div>
                     <Link
                       href="/profile"
@@ -148,10 +161,7 @@ export default function Navbar() {
                       Dashboard
                     </Link>
                     <button
-                      onClick={() => {
-                        setIsDropdownOpen(false)
-                        signOut({ callbackUrl: '/' })
-                      }}
+                      onClick={handleLogout}
                       className="block w-full text-left px-3 py-1.5 text-sm text-white hover:bg-white/10 transition-colors"
                     >
                       Sign Out
@@ -195,7 +205,7 @@ export default function Navbar() {
               >
                 Contact
               </Link>
-              {session ? (
+              {user ? (
                 <>
                   <Link
                     href="/profile"
@@ -205,10 +215,7 @@ export default function Navbar() {
                     Dashboard
                   </Link>
                   <button
-                    onClick={() => {
-                      setIsMobileMenuOpen(false)
-                      signOut({ callbackUrl: '/' })
-                    }}
+                    onClick={handleLogout}
                     className="text-left text-white hover:text-amber-400 px-2 py-1 text-sm font-medium transition-colors"
                   >
                     Sign Out

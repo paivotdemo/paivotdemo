@@ -1,11 +1,14 @@
 'use client'
 
-import { useState, FormEvent, ChangeEvent } from 'react'
+import { useState, FormEvent, ChangeEvent, useEffect } from 'react'
 import Link from 'next/link'
-import { signIn } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
 import { USSchool } from '../../data/us-schools-database'
 
 export default function SignUp() {
+  const router = useRouter()
+  const { signUp, user } = useAuth()
   const [step, setStep] = useState(1)
   const [showInstitutionDropdown, setShowInstitutionDropdown] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -26,6 +29,13 @@ export default function SignUp() {
     city: '',
     state: ''
   })
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      router.push('/profile')
+    }
+  }, [user, router])
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -55,35 +65,33 @@ export default function SignUp() {
       // Handle final submission
       try {
         setLoading(true)
-        // Call the register API endpoint
-        const response = await fetch('/api/auth/register', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email: signupData.email,
-            password: signupData.password,
-            firstName: signupData.firstName,
-            lastName: signupData.lastName,
-            status: signupData.status,
-            institution: signupData.institution
-          }),
-        })
-
-        const data = await response.json()
         
-        if (!response.ok) {
-          throw new Error(data.error || 'Registration failed')
+        // Prepare user data for Supabase
+        const userData = {
+          first_name: signupData.firstName,
+          middle_name: signupData.middleName,
+          last_name: signupData.lastName,
+          full_name: `${signupData.firstName} ${signupData.lastName}`,
+          status: signupData.status,
+          institution: signupData.institution,
+          institution_id: signupData.institutionId,
+          city: signupData.city,
+          state: signupData.state
         }
         
-        // After successful registration, sign in the user
-        const result = await signIn('credentials', {
-          email: signupData.email,
-          password: signupData.password,
-          redirect: true,
-          callbackUrl: '/profile'
-        })
+        // Register with Supabase
+        const { error, user } = await signUp(signupData.email, signupData.password, userData)
+        
+        if (error) {
+          throw new Error(error.message || 'Registration failed')
+        }
+        
+        // If email confirmation is required
+        if (!user?.confirmed_at) {
+          router.push('/signup/confirmation')
+        } else {
+          router.push('/profile')
+        }
       } catch (err: any) {
         setError(err.message || 'Failed to create account')
         console.error(err)

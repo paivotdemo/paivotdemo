@@ -1,60 +1,35 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
 
-export function middleware(request: NextRequest) {
-  // Get the pathname of the request
-  const path = request.nextUrl.pathname
+export async function middleware(req: NextRequest) {
+  const res = NextResponse.next()
   
-  // Check if the path is protected (admin routes)
-  const isAdminPath = path.startsWith('/api/admin') || path.startsWith('/dashboard') || path.startsWith('/admin')
+  // Create a Supabase client for the middleware
+  const supabase = createMiddlewareClient({ req, res })
   
-  // Check for both production and development session cookies
-  const isProduction = process.env.NODE_ENV === 'production'
+  // Check if the user is authenticated
+  const { data: { session } } = await supabase.auth.getSession()
   
-  // Get all possible session cookie names
-  const possibleCookieNames = [
-    '__Secure-next-auth.session-token',
-    'next-auth.session-token',
-    '__Host-next-auth.session-token'
-  ]
+  // Protected routes that require authentication
+  const protectedPaths = ['/profile', '/admin']
+  const isProtectedPath = protectedPaths.some(path => 
+    req.nextUrl.pathname === path || req.nextUrl.pathname.startsWith(`${path}/`)
+  )
   
-  // Try to find a valid session token
-  let token = null
-  for (const cookieName of possibleCookieNames) {
-    const cookieValue = request.cookies.get(cookieName)?.value
-    if (cookieValue) {
-      token = cookieValue
-      break
-    }
+  // If accessing a protected route without authentication, redirect to login
+  if (isProtectedPath && !session) {
+    const redirectUrl = new URL('/login', req.url)
+    return NextResponse.redirect(redirectUrl)
   }
   
-  // Log cookie information in development
-  if (process.env.NODE_ENV === 'development') {
-    console.log('Path:', path)
-    console.log('Is admin path:', isAdminPath)
-    console.log('Has token:', !!token)
-    
-    // Get available cookies without using .keys()
-    const availableCookies: string[] = []
-    request.cookies.getAll().forEach(cookie => {
-      availableCookies.push(cookie.name)
-    })
-    console.log('Available cookies:', availableCookies)
-  }
-  
-  // If the path is protected and there's no token, redirect to login
-  if (isAdminPath && !token) {
-    console.log('Redirecting to login: No valid session token found')
-    return NextResponse.redirect(new URL('/login', request.url))
-  }
-  
-  return NextResponse.next()
+  return res
 }
 
+// Specify which routes this middleware should run on
 export const config = {
   matcher: [
-    "/dashboard/:path*",
-    "/admin/:path*",
-    "/api/admin/:path*",
-  ]
+    '/profile/:path*',
+    '/admin/:path*',
+  ],
 } 
