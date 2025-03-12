@@ -14,6 +14,9 @@ interface User extends PrismaUser {
   role: string;
 }
 
+// Determine if we're in production
+const isProduction = process.env.NODE_ENV === 'production';
+
 // Auth configuration
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma) as any,
@@ -77,11 +80,24 @@ export const authOptions: NextAuthOptions = {
   ],
   session: {
     strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   pages: {
     signIn: "/login",
     signOut: "/",
     error: "/auth/error",
+  },
+  cookies: {
+    sessionToken: {
+      name: `${isProduction ? '__Secure-' : ''}next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: isProduction,
+        domain: isProduction ? process.env.COOKIE_DOMAIN || undefined : undefined,
+      },
+    },
   },
   callbacks: {
     async jwt({ token, user }) {
@@ -100,6 +116,19 @@ export const authOptions: NextAuthOptions = {
     }
   },
   debug: process.env.NODE_ENV === "development",
+  logger: {
+    error(code, metadata) {
+      console.error(`Auth error: ${code}`, metadata);
+    },
+    warn(code) {
+      console.warn(`Auth warning: ${code}`);
+    },
+    debug(code, metadata) {
+      if (process.env.NODE_ENV === "development") {
+        console.debug(`Auth debug: ${code}`, metadata);
+      }
+    },
+  },
 }
 
 // Server-side auth helpers
