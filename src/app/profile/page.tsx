@@ -1,34 +1,31 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
 import Image from 'next/image'
-import { useAuthSession } from '@/lib/auth'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function Profile() {
-  const { data: session } = useSession()
-  const { user } = useAuthSession()
   const router = useRouter()
+  const { user, signOut, loading } = useAuth()
   const [profileImage, setProfileImage] = useState('/default-avatar.png')
   const [bannerImage, setBannerImage] = useState('/default-banner.jpg')
 
+  // Redirect if not logged in
   useEffect(() => {
-    // Make first user admin if there's no admin yet
-    const setupAdmin = async () => {
-      if (user) {
-        try {
-          await fetch('/api/admin/setup', {
-            method: 'POST'
-          })
-        } catch (error) {
-          console.error('Error setting up admin:', error)
-        }
-      }
+    if (!loading && !user) {
+      router.push('/login')
     }
-    
-    setupAdmin()
-  }, [user])
+  }, [user, loading, router])
+
+  // If still loading or no user, show loading state
+  if (loading || !user) {
+    return (
+      <main className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-white text-xl">Loading profile...</div>
+      </main>
+    )
+  }
 
   const projects = [
     { id: 1, name: "Career Path Analysis", progress: 75, status: "In Progress" },
@@ -42,6 +39,11 @@ export default function Profile() {
     { label: "Hours Invested", value: "156" },
     { label: "Achievements", value: "8" },
   ]
+
+  // Get user metadata
+  const userData = user.user_metadata || {}
+  const fullName = userData.full_name || `${userData.first_name || ''} ${userData.last_name || ''}`.trim() || user.email
+  const userRole = userData.role || 'user'
 
   return (
     <main className="min-h-screen bg-black">
@@ -57,7 +59,7 @@ export default function Profile() {
             <div className="relative">
               <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-black bg-black">
                 <Image
-                  src={profileImage}
+                  src={user.user_metadata?.avatar_url || profileImage}
                   alt="Profile"
                   width={128}
                   height={128}
@@ -72,15 +74,15 @@ export default function Profile() {
             </div>
             {/* Profile Info */}
             <div className="mb-2">
-              <h1 className="text-4xl font-bold text-white">{session?.user?.name || 'User Name'}</h1>
-              <p className="text-white/60">{session?.user?.email || 'email@example.com'}</p>
+              <h1 className="text-4xl font-bold text-white">{fullName}</h1>
+              <p className="text-white/60">{user.email}</p>
               <div className="flex items-center mt-2 space-x-3">
-                {user?.role === 'admin' && (
+                {userRole === 'admin' && (
                   <span className="bg-purple-500/20 text-purple-400 px-3 py-1 rounded-full text-sm inline-block">
                     Admin
                   </span>
                 )}
-                {user?.role === 'admin' && (
+                {userRole === 'admin' && (
                   <button
                     onClick={() => router.push('/admin')}
                     className="text-amber-400 hover:text-amber-300 text-sm"
@@ -88,6 +90,12 @@ export default function Profile() {
                     Admin Dashboard →
                   </button>
                 )}
+                <button
+                  onClick={signOut}
+                  className="text-red-400 hover:text-red-300 text-sm"
+                >
+                  Sign Out
+                </button>
               </div>
             </div>
           </div>

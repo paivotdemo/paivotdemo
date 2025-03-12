@@ -1,12 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function Login() {
   const router = useRouter()
+  const { signIn, signInWithOAuth, user } = useAuth()
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [loginData, setLoginData] = useState({
@@ -14,25 +15,40 @@ export default function Login() {
     password: ''
   })
 
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      router.push('/profile')
+    }
+  }, [user, router])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+    setError('')
+    
     try {
-      const result = await signIn('credentials', { 
-        email: loginData.email, 
-        password: loginData.password,
-        redirect: false
-      })
-
-      if (result?.error) {
-        setError('Invalid credentials')
+      const { error } = await signIn(loginData.email, loginData.password)
+      
+      if (error) {
+        setError(error.message || 'Invalid credentials')
       } else {
         router.push('/profile')
       }
-    } catch (error) {
+    } catch (error: any) {
       setError('An error occurred during sign in')
+      console.error(error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleSocialLogin = async (provider: 'google' | 'apple' | 'linkedin') => {
+    try {
+      await signInWithOAuth(provider)
+    } catch (error: any) {
+      setError('An error occurred during social sign in')
+      console.error(error)
     }
   }
 
@@ -60,7 +76,7 @@ export default function Login() {
           
           <div className="space-y-4 mb-8">
             <button
-              onClick={() => signIn('google', { redirect: true, callbackUrl: '/profile' })}
+              onClick={() => handleSocialLogin('google')}
               className="w-full flex items-center justify-center gap-3 px-8 py-3 rounded-lg bg-white hover:bg-gray-100 transition-colors text-gray-800 text-xl font-medium"
             >
               <img src="/google.svg" alt="Google" className="w-6 h-6" />
@@ -68,7 +84,7 @@ export default function Login() {
             </button>
             
             <button
-              onClick={() => signIn('apple', { redirect: true, callbackUrl: '/profile' })}
+              onClick={() => handleSocialLogin('apple')}
               className="w-full flex items-center justify-center gap-3 px-8 py-3 rounded-lg bg-black hover:bg-gray-900 transition-colors text-white text-xl font-medium border border-white/20"
             >
               <img src="/apple.svg" alt="Apple" className="w-6 h-6" />
@@ -76,7 +92,7 @@ export default function Login() {
             </button>
             
             <button
-              onClick={() => signIn('linkedin', { redirect: true, callbackUrl: '/profile' })}
+              onClick={() => handleSocialLogin('linkedin')}
               className="w-full flex items-center justify-center gap-3 px-8 py-3 rounded-lg bg-[#0077B5] hover:bg-[#006399] transition-colors text-white text-xl font-medium"
             >
               <img src="/linkedin.svg" alt="LinkedIn" className="w-6 h-6" />
@@ -122,7 +138,7 @@ export default function Login() {
               type="submit"
               className="w-full bg-amber-400 text-white px-8 py-3 rounded-lg hover:bg-amber-500 transition-colors text-xl font-medium"
             >
-              Sign In
+              {loading ? 'Signing In...' : 'Sign In'}
             </button>
           </form>
         </div>
