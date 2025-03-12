@@ -17,6 +17,10 @@ interface User extends PrismaUser {
 // Determine if we're in production
 const isProduction = process.env.NODE_ENV === 'production';
 
+// Get the base URL for authentication
+const baseUrl = process.env.NEXTAUTH_URL || (isProduction ? 'https://paivot.net' : 'http://localhost:3000');
+console.log(`Auth base URL: ${baseUrl}, Environment: ${process.env.NODE_ENV}`);
+
 // Auth configuration
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma) as any,
@@ -36,6 +40,7 @@ export const authOptions: NextAuthOptions = {
         try {
           // Test database connection first
           await prisma.$connect();
+          console.log(`Attempting login for: ${credentials.email}`);
           
           const user = await prisma.user.findUnique({
             where: { 
@@ -109,7 +114,7 @@ export const authOptions: NextAuthOptions = {
         sameSite: "lax",
         path: "/",
         secure: isProduction,
-        domain: isProduction ? process.env.COOKIE_DOMAIN || undefined : undefined,
+        domain: isProduction ? (process.env.COOKIE_DOMAIN || '.paivot.net') : undefined,
       },
     },
     callbackUrl: {
@@ -119,7 +124,7 @@ export const authOptions: NextAuthOptions = {
         sameSite: "lax",
         path: "/",
         secure: isProduction,
-        domain: isProduction ? process.env.COOKIE_DOMAIN || undefined : undefined,
+        domain: isProduction ? (process.env.COOKIE_DOMAIN || '.paivot.net') : undefined,
       },
     },
     csrfToken: {
@@ -129,24 +134,44 @@ export const authOptions: NextAuthOptions = {
         sameSite: "lax",
         path: "/",
         secure: isProduction,
-        domain: isProduction ? process.env.COOKIE_DOMAIN || undefined : undefined,
+        domain: isProduction ? (process.env.COOKIE_DOMAIN || '.paivot.net') : undefined,
       },
     },
   },
+  jwt: {
+    // Explicitly set the max age to match the session
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
   callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-        token.role = user.role || 'user';
+    async jwt({ token, user, account }) {
+      // Initial sign in
+      if (account && user) {
+        console.log("JWT callback - initial sign in", { userId: user.id });
+        return {
+          ...token,
+          id: user.id,
+          role: (user as any).role || 'user',
+        };
       }
+      
+      // Return previous token if the access token has not expired yet
+      console.log("JWT callback - returning token", { tokenId: token.id });
       return token;
     },
     async session({ session, token }) {
-      if (session.user) {
+      if (session.user && token) {
+        console.log("Session callback", { tokenId: token.id });
         session.user.id = token.id as string;
-        session.user.role = token.role as string;
+        session.user.role = (token.role as string) || 'user';
       }
       return session;
+    },
+    async redirect({ url, baseUrl }) {
+      // Allows relative callback URLs
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      // Allows callback URLs on the same origin
+      else if (new URL(url).origin === baseUrl) return url;
+      return baseUrl;
     }
   },
   debug: process.env.NODE_ENV === "development",
@@ -167,7 +192,13 @@ export const authOptions: NextAuthOptions = {
 // Server-side auth helpers
 export async function getServerAuthSession() {
   try {
-    return await getServerSession(authOptions);
+    const session = await getServerSession(authOptions);
+    if (session) {
+      console.log("Got server session for user:", session.user?.email);
+    } else {
+      console.log("No active session found");
+    }
+    return session;
   } catch (error) {
     console.error("Error getting server session:", error);
     return null;

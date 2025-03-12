@@ -15,7 +15,27 @@ export async function GET(req: Request) {
     const cookieNames = allCookies.map(cookie => cookie.name)
     
     // Check for auth-related cookies
-    const authCookies = cookieNames.filter(name => name.includes('next-auth'))
+    const authCookies = allCookies.filter(cookie => 
+      cookie.name.includes('next-auth') || 
+      cookie.name.includes('__Secure') || 
+      cookie.name.includes('__Host')
+    ).map(cookie => ({
+      name: cookie.name,
+      // Only include properties that exist on RequestCookie
+      hasValue: !!cookie.value
+    }))
+    
+    // Get request information
+    const requestInfo = {
+      url: req.url,
+      headers: {
+        host: req.headers.get('host'),
+        origin: req.headers.get('origin'),
+        referer: req.headers.get('referer'),
+        userAgent: req.headers.get('user-agent'),
+        cookie: req.headers.get('cookie')?.substring(0, 50) + '...' // Truncate for security
+      }
+    }
     
     // Get environment info
     const envInfo = {
@@ -24,6 +44,10 @@ export async function GET(req: Request) {
       COOKIE_DOMAIN: process.env.COOKIE_DOMAIN,
       // Don't include the actual secret, just whether it exists
       HAS_NEXTAUTH_SECRET: !!process.env.NEXTAUTH_SECRET,
+      DATABASE_URL: process.env.DATABASE_URL ? 
+        `${process.env.DATABASE_URL.split('://')[0]}://*****` : undefined,
+      BASE_URL: process.env.NEXTAUTH_URL || 
+        (process.env.NODE_ENV === 'production' ? 'https://paivot.net' : 'http://localhost:3000')
     }
     
     // Return debug info
@@ -42,6 +66,7 @@ export async function GET(req: Request) {
         names: cookieNames,
         authRelated: authCookies,
       },
+      request: requestInfo,
       environment: envInfo,
       timestamp: new Date().toISOString(),
     })
@@ -50,6 +75,7 @@ export async function GET(req: Request) {
     return NextResponse.json({
       error: 'Failed to get debug info',
       message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
     }, { status: 500 })
   }
 } 
