@@ -15,6 +15,7 @@ export default function AdminDashboard() {
     activeUsers: 0,
     pendingVerifications: 0
   })
+  const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
     if (!loading) {
@@ -32,6 +33,8 @@ export default function AdminDashboard() {
           const roleAttribute = attributes?.find(attr => attr.Name === 'custom:role')
           if (!roleAttribute || roleAttribute.Value !== 'admin') {
             router.push('/profile')
+          } else {
+            setIsAdmin(true)
           }
         })
       }
@@ -52,10 +55,10 @@ export default function AdminDashboard() {
       }
     }
 
-    if (user && user.user_metadata?.role === 'admin') {
+    if (user && isAdmin) {
       fetchStats()
     }
-  }, [user])
+  }, [user, isAdmin])
 
   if (loading) {
     return (
