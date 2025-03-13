@@ -1,31 +1,8 @@
-# Paivot - Next.js Application
+# Paivot Demo
 
-A modern web application built with Next.js, Prisma, and NextAuth.js.
+A modern web application built with Next.js and Supabase.
 
-## Project Setup
-
-### Quick Setup (Recommended)
-
-We've created a setup script to make it easy to get started:
-
-```bash
-# Clone the repository
-git clone https://github.com/paivotdemo/paivotdemo.git
-cd paivotdemo
-
-# Run the setup script
-./setup.sh
-```
-
-The setup script will:
-1. Create environment files from templates
-2. Install dependencies
-3. Generate the Prisma client
-4. Optionally run database migrations
-
-### Manual Setup
-
-If you prefer to set up manually:
+## Quick Start
 
 1. Clone the repository:
    ```bash
@@ -35,62 +12,34 @@ If you prefer to set up manually:
 
 2. Create environment files:
    ```bash
-   cp .env.example .env
    cp .env.example .env.local
    ```
 
-3. Edit the `.env` and `.env.local` files with your actual credentials.
+3. Edit the `.env.local` file with your Supabase credentials:
+   ```
+   NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+   ```
 
 4. Install dependencies:
    ```bash
    yarn install
    ```
 
-5. Generate Prisma client:
+5. Start the development server:
    ```bash
-   npx prisma generate
+   yarn dev
    ```
 
-6. Run database migrations:
-   ```bash
-   npx prisma migrate dev
-   ```
-
-## Database Setup
-
-### Option 1: Remote Database (Recommended for Team Development)
-
-For seamless development across multiple machines, we recommend using a shared remote database:
-
-1. Create a PostgreSQL database on [Supabase](https://supabase.com/), [Railway](https://railway.app/), or [Neon](https://neon.tech/)
-2. Update your `.env` file with the connection string
-
-### Option 2: Local Database
-
-For local development:
-
-1. Install PostgreSQL on your machine
-2. Create a database
-3. Update your `.env` file with the local connection string
-4. Run migrations: `npx prisma migrate dev`
-
-## Development
-
-Start the development server:
-
-```bash
-yarn dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+6. Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 ## Authentication
 
-This project uses NextAuth.js for authentication. To set up authentication:
+This project uses Supabase for authentication. It supports:
 
-1. Configure your OAuth providers in the `.env` file
-2. For local development, set `NEXTAUTH_URL="http://localhost:3000"`
-3. Generate a secure random string for `NEXTAUTH_SECRET`
+- Email/password authentication
+- Social logins (Google, Apple, LinkedIn)
+- User profiles stored in Supabase
 
 ## Deployment
 
