@@ -1,6 +1,13 @@
 # Paivot Demo
 
-A modern web application built with Next.js and Supabase.
+A modern web application built with Next.js and Supabase, hosted on AWS Amplify.
+
+## Architecture
+
+- **Frontend**: Next.js 14 with App Router
+- **Authentication & Database**: Supabase
+- **Hosting**: AWS Amplify
+- **Styling**: Tailwind CSS
 
 ## Quick Start
 
@@ -33,35 +40,71 @@ A modern web application built with Next.js and Supabase.
 
 6. Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-## Authentication
+## Supabase Integration
 
-This project uses Supabase for authentication. It supports:
+This project uses Supabase for authentication and data storage:
 
-- Email/password authentication
+### Authentication
+- Email/password login
 - Social logins (Google, Apple, LinkedIn)
+- Session management
+
+### Database
 - User profiles stored in Supabase
+- PostgreSQL database with real-time capabilities
+- Row Level Security (RLS) for data protection
 
-## Deployment
+## AWS Amplify Deployment
 
-### Deploy on Vercel (Recommended)
+The application is deployed using AWS Amplify, which provides:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new) from the creators of Next.js.
+1. **Continuous Deployment**
+   - Automatic builds from GitHub
+   - Preview environments for pull requests
 
-1. Connect your GitHub repository to Vercel
-2. Configure environment variables in the Vercel dashboard
-3. Deploy with a single click
+2. **Environment Configuration**
+   - Environment variables management
+   - Domain and hosting configuration
 
-### Other Deployment Options
+3. **Monitoring and Logs**
+   - Build and deployment logs
+   - Performance monitoring
 
-- [Netlify](https://netlify.com)
-- [Railway](https://railway.app)
-- [Render](https://render.com)
+### Deploying to AWS Amplify
+
+1. Connect your GitHub repository to AWS Amplify
+2. Configure the build settings:
+   ```yaml
+   version: 1
+   frontend:
+     phases:
+       preBuild:
+         commands:
+           - yarn install
+       build:
+         commands:
+           - yarn build
+     artifacts:
+       baseDirectory: .next
+       files:
+         - '**/*'
+     cache:
+       paths:
+         - node_modules/**/*
+         - .next/cache/**/*
+   ```
+3. Add environment variables in the Amplify Console
+4. Deploy your application
 
 ## Contributing
 
 1. Create a new branch for your feature
 2. Make your changes
 3. Submit a pull request
+
+## Troubleshooting
+
+For current issues and status, see [CURRENT_STATUS.md](./CURRENT_STATUS.md).
 
 ## License
 
