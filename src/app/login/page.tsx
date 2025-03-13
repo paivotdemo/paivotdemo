@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 
-export default function Login() {
+// Login page component with SSR-safe implementation
+export default function LoginPage() {
   const router = useRouter()
   const { signIn, signInWithOAuth, user } = useAuth()
   const [error, setError] = useState('')
