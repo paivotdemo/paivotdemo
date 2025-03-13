@@ -2,39 +2,28 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
-import { 
-  CognitoUser,
-  CognitoUserPool,
-  AuthenticationDetails,
-  CognitoUserAttribute,
-  CognitoIdToken,
-  ISignUpResult,
-  CognitoUserSession
-} from 'amazon-cognito-identity-js'
-
-// Configure Cognito User Pool
-const userPool = new CognitoUserPool({
-  UserPoolId: process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID!,
-  ClientId: process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID!
-})
+import { supabase } from '@/lib/supabase'
+import { User, Session } from '@supabase/supabase-js'
 
 // Define the auth context type
 type AuthContextType = {
-  user: CognitoUser | null
+  user: User | null
+  session: Session | null
   loading: boolean
-  signIn: (email: string, password: string) => Promise<{ error: Error | null }>
-  signUp: (email: string, password: string, userData: any) => Promise<{ error: Error | null, user: CognitoUser | null }>
-  signOut: () => void
+  signIn: (email: string, password: string) => Promise<{ error: any | null }>
+  signUp: (email: string, password: string, userData: any) => Promise<{ error: any | null, user: User | null }>
+  signOut: () => Promise<void>
   signInWithOAuth: (provider: 'google' | 'apple' | 'linkedin') => Promise<void>
 }
 
 // Create the context with a default value
 const AuthContext = createContext<AuthContextType>({
   user: null,
+  session: null,
   loading: true,
   signIn: async () => ({ error: null }),
   signUp: async () => ({ error: null, user: null }),
-  signOut: () => {},
+  signOut: async () => {},
   signInWithOAuth: async () => {},
 })
 
@@ -44,117 +33,147 @@ export const useAuth = () => useContext(AuthContext)
 // Auth provider component
 export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter()
-  const [user, setUser] = useState<CognitoUser | null>(null)
+  const [user, setUser] = useState<User | null>(null)
+  const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Check if there's a current authenticated user
-    const getCurrentUser = async () => {
+    // Get initial session
+    const getInitialSession = async () => {
       try {
-        const currentUser = userPool.getCurrentUser()
-        if (currentUser) {
-          currentUser.getSession((err: Error | null, session: CognitoUserSession | null) => {
-            if (err) {
-              console.error('Error getting session:', err)
-              setLoading(false)
-              return
-            }
-            if (session?.isValid()) {
-              setUser(currentUser)
-            }
-          })
+        const { data: { session } } = await supabase.auth.getSession()
+        
+        if (session) {
+          setSession(session)
+          setUser(session.user)
         }
       } catch (error) {
-        console.error('Error getting current user:', error)
+        console.error('Error getting initial session:', error)
       } finally {
         setLoading(false)
       }
     }
-
-    getCurrentUser()
+    
+    getInitialSession()
+    
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        console.log('Auth state changed:', event)
+        setSession(session)
+        setUser(session?.user ?? null)
+        setLoading(false)
+      }
+    )
+    
+    return () => {
+      subscription.unsubscribe()
+    }
   }, [])
-
+  
   // Sign in with email and password
   const signIn = async (email: string, password: string) => {
-    return new Promise<{ error: Error | null }>((resolve) => {
-      const authenticationDetails = new AuthenticationDetails({
-        Username: email,
-        Password: password,
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       })
-
-      const cognitoUser = new CognitoUser({
-        Username: email,
-        Pool: userPool
-      })
-
-      cognitoUser.authenticateUser(authenticationDetails, {
-        onSuccess: (session: CognitoUserSession) => {
-          setUser(cognitoUser)
-          resolve({ error: null })
-        },
-        onFailure: (err: Error) => {
-          console.error('Error signing in:', err)
-          resolve({ error: err })
-        }
-      })
-    })
+      
+      if (error) {
+        return { error }
+      }
+      
+      return { error: null }
+    } catch (error) {
+      console.error('Error signing in:', error)
+      return { error }
+    }
   }
-
+  
   // Sign up with email and password
   const signUp = async (email: string, password: string, userData: any) => {
-    return new Promise<{ error: Error | null, user: CognitoUser | null }>((resolve) => {
-      const attributeList = [
-        new CognitoUserAttribute({ Name: 'email', Value: email }),
-        new CognitoUserAttribute({ Name: 'name', Value: userData.full_name || '' }),
-        new CognitoUserAttribute({ Name: 'custom:first_name', Value: userData.first_name || '' }),
-        new CognitoUserAttribute({ Name: 'custom:last_name', Value: userData.last_name || '' }),
-      ]
-
-      userPool.signUp(email, password, attributeList, [], (err: Error | undefined, result?: ISignUpResult) => {
-        if (err) {
-          console.error('Error signing up:', err)
-          resolve({ error: err, user: null })
-          return
-        }
-        if (result) {
-          resolve({ error: null, user: result.user })
+    try {
+      console.log('AuthContext: Signing up with Supabase', { email, userData })
+      
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: userData,
         }
       })
-    })
-  }
-
-  // Sign out
-  const signOut = () => {
-    const currentUser = userPool.getCurrentUser()
-    if (currentUser) {
-      currentUser.signOut()
-      setUser(null)
-      router.push('/')
+      
+      if (error) {
+        console.error('AuthContext: Signup error', error)
+        return { error, user: null }
+      }
+      
+      console.log('AuthContext: Signup successful', data)
+      
+      // If auto-confirm is enabled, we can create the profile here
+      if (data.user && data.user.confirmed_at) {
+        try {
+          // Ensure profile exists
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .upsert({
+              id: data.user.id,
+              email: data.user.email,
+              full_name: userData.full_name,
+              first_name: userData.first_name,
+              last_name: userData.last_name,
+              middle_name: userData.middle_name,
+              status: userData.status,
+              institution: userData.institution,
+              institution_id: userData.institution_id,
+              city: userData.city,
+              state: userData.state,
+              updated_at: new Date().toISOString()
+            })
+            
+          if (profileError) {
+            console.error('AuthContext: Error creating profile', profileError)
+          }
+        } catch (profileErr) {
+          console.error('AuthContext: Profile creation error', profileErr)
+        }
+      }
+      
+      return { error: null, user: data.user }
+    } catch (error) {
+      console.error('AuthContext: Error signing up:', error)
+      return { error, user: null }
     }
   }
-
+  
+  // Sign out
+  const signOut = async () => {
+    try {
+      await supabase.auth.signOut()
+      router.push('/')
+    } catch (error) {
+      console.error('Error signing out:', error)
+    }
+  }
+  
   // Sign in with OAuth provider
   const signInWithOAuth = async (provider: 'google' | 'apple' | 'linkedin') => {
-    // Cognito hosted UI URL
-    const domain = `${process.env.NEXT_PUBLIC_COGNITO_DOMAIN}.auth.${process.env.NEXT_PUBLIC_AWS_REGION}.amazoncognito.com`
-    const redirectUri = typeof window !== 'undefined' ? `${window.location.origin}/profile` : ''
-    const clientId = process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID!
-    
-    const url = `https://${domain}/oauth2/authorize?` +
-      `client_id=${clientId}&` +
-      `response_type=code&` +
-      `scope=email+openid+profile&` +
-      `redirect_uri=${redirectUri}&` +
-      `identity_provider=${provider}`
-
-    if (typeof window !== 'undefined') {
-      window.location.href = url
+    try {
+      await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/profile`,
+        },
+      })
+    } catch (error) {
+      console.error(`Error signing in with ${provider}:`, error)
     }
   }
-
+  
   return (
     <AuthContext.Provider value={{
       user,
+      session,
       loading,
       signIn,
       signUp,

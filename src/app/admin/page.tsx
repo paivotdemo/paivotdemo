@@ -15,28 +15,14 @@ export default function AdminDashboard() {
     activeUsers: 0,
     pendingVerifications: 0
   })
-  const [isAdmin, setIsAdmin] = useState(false)
 
+  // Redirect if not admin
   useEffect(() => {
     if (!loading) {
       if (!user) {
         router.push('/login')
-      } else {
-        // Get user attributes to check role
-        user.getUserAttributes((err, attributes) => {
-          if (err) {
-            console.error('Error getting user attributes:', err)
-            router.push('/profile')
-            return
-          }
-          
-          const roleAttribute = attributes?.find(attr => attr.Name === 'custom:role')
-          if (!roleAttribute || roleAttribute.Value !== 'admin') {
-            router.push('/profile')
-          } else {
-            setIsAdmin(true)
-          }
-        })
+      } else if (user.user_metadata?.role !== 'admin') {
+        router.push('/profile')
       }
     }
   }, [user, loading, router])
@@ -55,15 +41,25 @@ export default function AdminDashboard() {
       }
     }
 
-    if (user && isAdmin) {
+    if (user && user.user_metadata?.role === 'admin') {
       fetchStats()
     }
-  }, [user, isAdmin])
+  }, [user])
 
-  if (loading) {
+  // If still loading or no user, show loading state
+  if (loading || !user) {
     return (
       <main className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-white text-xl">Loading...</div>
+        <div className="text-white text-xl">Loading admin dashboard...</div>
+      </main>
+    )
+  }
+
+  // If not admin, show unauthorized message
+  if (user.user_metadata?.role !== 'admin') {
+    return (
+      <main className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-white text-xl">You do not have permission to access this page.</div>
       </main>
     )
   }
