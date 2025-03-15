@@ -153,13 +153,15 @@ export default function Navbar() {
                       <p className="text-sm text-white font-medium">{userName}</p>
                       <p className="text-xs text-white/60">{user.email}</p>
                     </div>
-                    <Link
-                      href="/profile"
-                      className="block px-3 py-1.5 text-sm text-white hover:bg-white/10 transition-colors"
-                      onClick={() => setIsDropdownOpen(false)}
+                    <button
+                      className="block w-full text-left px-3 py-1.5 text-sm text-white hover:bg-white/10 transition-colors"
+                      onClick={() => {
+                        setIsDropdownOpen(false);
+                        router.push('/profile');
+                      }}
                     >
                       Dashboard
-                    </Link>
+                    </button>
                     <button
                       onClick={handleLogout}
                       className="block w-full text-left px-3 py-1.5 text-sm text-white hover:bg-white/10 transition-colors"
@@ -207,13 +209,15 @@ export default function Navbar() {
               </Link>
               {user ? (
                 <>
-                  <Link
-                    href="/profile"
-                    className="text-white hover:text-amber-400 px-2 py-1 text-sm font-medium transition-colors"
-                    onClick={() => setIsMobileMenuOpen(false)}
+                  <button
+                    className="text-white hover:text-amber-400 px-2 py-1 text-sm font-medium transition-colors text-left w-full"
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      router.push('/profile');
+                    }}
                   >
                     Dashboard
-                  </Link>
+                  </button>
                   <button
                     onClick={handleLogout}
                     className="text-left text-white hover:text-amber-400 px-2 py-1 text-sm font-medium transition-colors"
