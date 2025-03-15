@@ -153,10 +153,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Sign out
   const signOut = async () => {
     try {
-      await supabase.auth.signOut()
-      router.push('/')
+      console.log('Attempting to sign out...');
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error('Error during sign out:', error);
+      } else {
+        console.log('Successfully signed out');
+      }
+      
+      // Clear user state regardless of API success
+      setUser(null);
+      setSession(null);
+      
+      try {
+        router.push('/');
+      } catch (routerError) {
+        console.error('Error navigating after sign out:', routerError);
+        // Fallback to window.location if router fails
+        window.location.href = '/';
+      }
     } catch (error) {
-      console.error('Error signing out:', error)
+      console.error('Error signing out:', error);
+      // Still try to redirect even if sign out fails
+      try {
+        router.push('/');
+      } catch (routerError) {
+        window.location.href = '/';
+      }
     }
   }
   
