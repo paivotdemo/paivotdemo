@@ -159,7 +159,16 @@ export default function Navbar() {
                         console.log('Dashboard clicked - dropdown');
                         console.log('User state:', user);
                         setIsDropdownOpen(false);
-                        router.push('/profile');
+                        
+                        // Add a small delay to ensure state updates are processed
+                        setTimeout(() => {
+                          if (user) {
+                            console.log('Navigating to profile with user:', user.email);
+                            router.push('/profile');
+                          } else {
+                            console.log('User not found, cannot navigate');
+                          }
+                        }, 100);
                       }}
                     >
                       Dashboard
@@ -217,7 +226,16 @@ export default function Navbar() {
                       console.log('Dashboard clicked - mobile');
                       console.log('User state:', user);
                       setIsMobileMenuOpen(false);
-                      router.push('/profile');
+                      
+                      // Add a small delay to ensure state updates are processed
+                      setTimeout(() => {
+                        if (user) {
+                          console.log('Navigating to profile with user:', user.email);
+                          router.push('/profile');
+                        } else {
+                          console.log('User not found, cannot navigate');
+                        }
+                      }, 100);
                     }}
                   >
                     Dashboard
