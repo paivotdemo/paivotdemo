@@ -156,9 +156,10 @@ export default function Navbar() {
                     <button
                       className="block w-full text-left px-3 py-1.5 text-sm text-white hover:bg-white/10 transition-colors"
                       onClick={() => {
+                        console.log('Dashboard clicked - dropdown');
+                        console.log('User state:', user);
                         setIsDropdownOpen(false);
                         router.push('/profile');
-                        console.log('Dashboard clicked')
                       }}
                     >
                       Dashboard
@@ -213,6 +214,8 @@ export default function Navbar() {
                   <button
                     className="text-white hover:text-amber-400 px-2 py-1 text-sm font-medium transition-colors text-left w-full"
                     onClick={() => {
+                      console.log('Dashboard clicked - mobile');
+                      console.log('User state:', user);
                       setIsMobileMenuOpen(false);
                       router.push('/profile');
                     }}
