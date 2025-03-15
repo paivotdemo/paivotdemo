@@ -158,6 +158,7 @@ export default function Navbar() {
                       onClick={() => {
                         setIsDropdownOpen(false);
                         router.push('/profile');
+                        console.log('Dashboard clicked')
                       }}
                     >
                       Dashboard
